@@ -1,279 +1,205 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
-  Animated,
-  Easing,
+  FlatList,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
-// ==================================================
-// DATOS DE EJEMPLO
-// ==================================================
+type VideoItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+};
 
-// Se crea un arreglo con 12 elementos usando Array.from.
-// Cada elemento será un texto como "Proceso 1", "Proceso 2", etc.
-// Esta será la información que se mostrará después de la carga.
-const data = Array.from({ length: 12 }, (_, i) => `Proceso ${i + 1}`);
+const ALL_VIDEOS: VideoItem[] = [
+  {
+    id: '1',
+    title: 'Mika jugando feliz',
+    subtitle: 'Video recomendado para adopción',
+    image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '2',
+    title: 'Bruno paseando',
+    subtitle: 'Nuevo contenido del refugio',
+    image: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '3',
+    title: 'Luna descansando',
+    subtitle: 'Historia destacada de hoy',
+    image: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '4',
+    title: 'Toby aprendiendo trucos',
+    subtitle: 'Momentos tiernos del día',
+    image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '5',
+    title: 'Kira en el patio',
+    subtitle: 'Más videos para seguir viendo',
+    image: 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '6',
+    title: 'Milo comiendo premio',
+    subtitle: 'Contenido cargado al bajar',
+    image: 'https://images.unsplash.com/photo-1574293876203-8bded53be0f0?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '7',
+    title: 'Riley corriendo',
+    subtitle: 'Siguiente bloque de videos',
+    image: 'https://images.unsplash.com/photo-1507146426996-ef05306b995a?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '8',
+    title: 'Cachorros jugando',
+    subtitle: 'Más contenido disponible',
+    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '9',
+    title: 'Perritos del refugio',
+    subtitle: 'Carga progresiva',
+    image: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?q=80&w=1200&auto=format&fit=crop',
+  },
+  {
+    id: '10',
+    title: 'Adopción responsable',
+    subtitle: 'Últimos contenidos',
+    image: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?q=80&w=1200&auto=format&fit=crop',
+  },
+];
 
-
-// ==================================================
-// COMPONENTE INTERNO: LOADER ANIMADO
-// ==================================================
-
-// PawLoader es un componente visual reutilizable.
-// Su trabajo es dibujar una huella animada mientras la pantalla está cargando.
-function PawLoader() {
-  // ==========================================
-  // VALORES ANIMADOS
-  // ==========================================
-
-  // scale controla el tamaño de la huella.
-  // Empieza en 1, o sea, tamaño normal.
-  const scale = useRef(new Animated.Value(1)).current;
-
-  // opacity controla la transparencia.
-  // Empieza en 0.7 para que la huella ya se vea, pero ligeramente tenue.
-  const opacity = useRef(new Animated.Value(0.7)).current;
-
-  // rotate controla la rotación.
-  // Empieza en 0 y luego se interpolará a grados.
-  const rotate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // ==========================================
-    // DEFINICIÓN DE LA ANIMACIÓN
-    // ==========================================
-
-    // Animated.loop hace que toda la animación se repita indefinidamente.
-    // Dentro usamos Animated.parallel para ejecutar varias animaciones al mismo tiempo.
-    const loop = Animated.loop(
-      Animated.parallel([
-        // ------------------------------------------
-        // ANIMACIÓN DE ESCALA
-        // ------------------------------------------
-        // Primero la huella crece un poco (1 -> 1.15),
-        // luego vuelve a su tamaño original (1.15 -> 1).
-        Animated.sequence([
-          Animated.timing(scale, {
-            toValue: 1.15,
-            duration: 450,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          Animated.timing(scale, {
-            toValue: 1,
-            duration: 450,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.ease),
-          }),
-        ]),
-
-        // ------------------------------------------
-        // ANIMACIÓN DE OPACIDAD
-        // ------------------------------------------
-        // La huella se vuelve más visible (0.7 -> 1)
-        // y luego baja un poco otra vez (1 -> 0.7).
-        Animated.sequence([
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 450,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0.7,
-            duration: 450,
-            useNativeDriver: true,
-          }),
-        ]),
-
-        // ------------------------------------------
-        // ANIMACIÓN DE ROTACIÓN
-        // ------------------------------------------
-        // El valor numérico va de 0 a 1.
-        // Después ese valor se transformará en grados usando interpolate.
-        Animated.timing(rotate, {
-          toValue: 1,
-          duration: 900,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-      ])
-    );
-
-    // Empieza la animación en cuanto el componente aparece en pantalla.
-    loop.start();
-
-    // cleanup:
-    // cuando el componente se desmonta, detenemos el loop
-    // para evitar animaciones corriendo en segundo plano.
-    return () => loop.stop();
-  }, [opacity, rotate, scale]);
-
-  // ==========================================
-  // INTERPOLACIÓN DE ROTACIÓN
-  // ==========================================
-
-  // rotate vale numéricamente entre 0 y 1,
-  // pero transform: rotate necesita strings como "8deg".
-  // interpolate convierte ese rango numérico en grados.
-  const spin = rotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-8deg', '8deg'],
-  });
-
-  return (
-    // Animated.View es igual que View,
-    // pero acepta estilos animados como scale, rotate y opacity.
-    <Animated.View
-      style={[
-        styles.pawWrap,
-        {
-          transform: [{ scale }, { rotate: spin }],
-          opacity,
-        },
-      ]}
-    >
-      {/* Ícono visual de huella */}
-      <Ionicons name="paw" size={54} color="#B88761" />
-    </Animated.View>
-  );
-}
-
-
-// ==================================================
-// PANTALLA PRINCIPAL
-// ==================================================
+const PAGE_SIZE = 4;
 
 export default function LoadingScreen() {
-  // loading decide qué se muestra:
-  // - true: aparece el loader
-  // - false: aparece la lista
-  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    // setTimeout simula una carga de 1400 ms.
-    // Después de ese tiempo, loading cambia a false.
-    const t = setTimeout(() => setLoading(false), 1400);
+  const visibleVideos = useMemo(() => {
+    return ALL_VIDEOS.slice(0, visibleCount);
+  }, [visibleCount]);
 
-    // cleanup:
-    // si el componente se desmonta antes de terminar el tiempo,
-    // se limpia el temporizador para evitar errores.
-    return () => clearTimeout(t);
-  }, []);
+  const loadMore = () => {
+    if (loadingMore) return;
+    if (visibleCount >= ALL_VIDEOS.length) return;
 
-  // Mientras loading sea true, se retorna solo la pantalla de carga.
-  if (loading) {
+    setLoadingMore(true);
+
+    setTimeout(() => {
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, ALL_VIDEOS.length));
+      setLoadingMore(false);
+    }, 900);
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return <View style={{ height: 10 }} />;
+
     return (
-      <View style={styles.center}>
-        <View style={styles.loaderCard}>
-          <PawLoader />
-          <Text style={styles.text}>Cargando contenido...</Text>
-          <Text style={styles.subtext}>Preparando todo para ti</Text>
-        </View>
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#B88761" />
+        <Text style={styles.footerText}>Cargando más videos...</Text>
       </View>
     );
-  }
+  };
 
-  // Cuando loading pasa a false, se muestra la lista.
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Videos del refugio</Text>
+      <Text style={styles.subtitle}>
+        Baja para descubrir más contenido poco a poco
+      </Text>
+
       <FlatList
-        // Datos a renderizar
-        data={data}
-
-        // Clave única de cada elemento
-        keyExtractor={(item) => item}
-
-        // Cómo se dibuja cada elemento de la lista
-        renderItem={({ item }) => <Text style={styles.item}>{item}</Text>}
-
-        // Espacio al final de la lista
-        contentContainerStyle={{ paddingBottom: 16 }}
+        data={visibleVideos}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Image source={{ uri: item.image }} style={styles.image} />
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+          </View>
+        )}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={renderFooter}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 }
 
-
-// ==================================================
-// ESTILOS
-// ==================================================
-
 const styles = StyleSheet.create({
-  // Pantalla centrada del loader
-  center: {
+  container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F7F1EA',
-    padding: 18,
+    paddingTop: 18,
   },
-
-  // Tarjeta que contiene el loader y los textos
-  loaderCard: {
-    width: '100%',
-    maxWidth: 320,
+  title: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#4A3728',
+    textAlign: 'center',
+    paddingHorizontal: 18,
+  },
+  subtitle: {
+    marginTop: 8,
+    marginBottom: 14,
+    fontSize: 14,
+    color: '#7C6A5A',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    lineHeight: 20,
+  },
+  listContent: {
+    paddingHorizontal: 18,
+    paddingBottom: 24,
+  },
+  card: {
     backgroundColor: '#FFFDF9',
-    borderRadius: 28,
-    paddingVertical: 30,
-    paddingHorizontal: 22,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#E7D8C8',
-  },
-
-  // Círculo visual donde vive la huella animada
-  pawWrap: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    backgroundColor: '#F2E6DB',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 24,
+    padding: 14,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
-
-  // Texto principal de carga
-  text: {
-    marginTop: 4,
-    fontSize: 18,
+  image: {
+    width: '100%',
+    height: 220,
+    borderRadius: 18,
+    marginBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 20,
     fontWeight: '900',
     color: '#4A3728',
   },
-
-  // Subtexto de apoyo
-  subtext: {
+  cardSubtitle: {
     marginTop: 6,
     fontSize: 13,
-    color: '#7C6A5A',
-    textAlign: 'center',
+    color: '#8B7766',
+    lineHeight: 19,
   },
-
-  // Contenedor de la lista final
-  container: {
-    flex: 1,
-    padding: 18,
-    backgroundColor: '#F7F1EA',
+  footerLoader: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  // Estilo de cada proceso de la lista
-  item: {
-    padding: 16,
-    marginBottom: 10,
-    backgroundColor: '#FFFDF9',
-    borderRadius: 14,
-    color: '#4A3728',
+  footerText: {
+    marginTop: 8,
+    fontSize: 12,
     fontWeight: '700',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    color: '#8B7766',
   },
 });

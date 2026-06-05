@@ -1,139 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import InfoModalContent from '../components/modal/InfoModalContent';
+import shelterInfo from '../data/shelterInfo';
+import { COLORS } from '../constants/colors';
 
-// Este componente representa una pantalla que contiene
-// un botón para abrir un modal informativo.
 export default function ModalScreen() {
-  // ==================================================
-  // ESTADO
-  // ==================================================
-
-  // "visible" controla si el modal está abierto o cerrado.
-  // false = oculto
-  // true = visible
   const [visible, setVisible] = useState(false);
 
   return (
     <View style={styles.container}>
-      {/* Título principal de la pantalla */}
       <Text style={styles.title}>Aviso del refugio</Text>
+      <Text style={styles.subtitle}>Información importante para adoptar y cuidar perritos</Text>
 
-      {/* Subtítulo con contexto para el usuario */}
-      <Text style={styles.subtitle}>
-        Información importante para adoptar y cuidar perritos
-      </Text>
-
-      {/* ==================================================
-          BOTÓN DE APERTURA
-         ================================================== */}
-
-      {/* Al presionar este botón, el estado cambia a true
-          y el modal se muestra */}
       <Pressable style={styles.openBtn} onPress={() => setVisible(true)}>
         <Ionicons name="paw-outline" size={18} color="#fff" />
         <Text style={styles.openText}>Abrir mensaje</Text>
       </Pressable>
 
-      {/* ==================================================
-          MODAL
-         ================================================== */}
-
-      <Modal
-        // Hace que el fondo del modal sea transparente,
-        // para que podamos ver el overlay semitransparente que dibujamos manualmente.
-        transparent
-
-        // Controla si el modal está visible o no.
-        visible={visible}
-
-        // Define la animación de entrada/salida del modal.
-        animationType="fade"
-
-        // onRequestClose es importante especialmente en Android.
-        // Se ejecuta cuando el usuario intenta cerrar el modal con el botón físico de atrás.
-        onRequestClose={() => setVisible(false)}
-      >
-        {/* Fondo oscuro detrás del modal para enfocar la atención del usuario */}
+      <Modal transparent visible={visible} animationType="fade" onRequestClose={() => setVisible(false)}>
         <View style={styles.overlay}>
-          {/* Tarjeta visual principal del modal */}
           <View style={styles.modalCard}>
-            {/* ScrollView permite recorrer el contenido si el modal es alto */}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.modalContent}
-            >
-              {/* Imagen superior */}
-              <View style={styles.imageWrap}>
-                <Image
-                  source={{
-                    uri: 'https://i.pinimg.com/1200x/ab/95/57/ab9557e1791d014a763636822b714121.jpg',
-                  }}
-                  style={styles.image}
-                />
-              </View>
+            <InfoModalContent />
 
-              {/* Título principal dentro del modal */}
-              <Text style={styles.modalTitle}>¡Bienvenido a Colitas Felices!</Text>
+            <View style={styles.actions}>
+              <Pressable style={styles.closeBtn} onPress={() => setVisible(false)}>
+                <Text style={styles.buttonText}>Cerrar</Text>
+              </Pressable>
 
-              {/* Mensaje largo de información */}
-              <Text style={styles.modalText}>
-                Cada adopción cambia una vida. Antes de llevarte un perrito,
-                asegúrate de ofrecerle tiempo, cariño y un hogar responsable.
-              </Text>
-
-              {/* ==================================================
-                  BLOQUES INFORMATIVOS
-                 ================================================== */}
-
-              <View style={styles.infoRow}>
-                <View style={styles.infoBox}>
-                  <Ionicons name="heart-outline" size={18} color="#B88761" />
-                  <Text style={styles.infoText}>Adopción responsable</Text>
-                </View>
-
-                <View style={styles.infoBox}>
-                  <Ionicons
-                    name="shield-checkmark-outline"
-                    size={18}
-                    color="#B88761"
-                  />
-                  <Text style={styles.infoText}>Cuidado y bienestar</Text>
-                </View>
-              </View>
-
-              {/* ==================================================
-                  RECOMENDACIONES
-                 ================================================== */}
-
-              <View style={styles.tips}>
-                <Text style={styles.tipsTitle}>Recomendaciones</Text>
-                <Text style={styles.tip}>• Mantén agua limpia y comida adecuada.</Text>
-                <Text style={styles.tip}>• Dale paseos y tiempo de calidad.</Text>
-                <Text style={styles.tip}>• Visita al veterinario regularmente.</Text>
-              </View>
-
-              {/* ==================================================
-                  BOTONES DE CIERRE
-                 ================================================== */}
-
-              <View style={styles.actions}>
-                {/* Botón secundario para cerrar */}
-                <Pressable style={styles.closeBtn} onPress={() => setVisible(false)}>
-                  <Text style={styles.buttonText}>Cerrar</Text>
-                </Pressable>
-
-                {/* Botón principal para confirmar y cerrar */}
-                <Pressable style={styles.acceptBtn} onPress={() => setVisible(false)}>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={18}
-                    color="#fff"
-                  />
-                  <Text style={styles.buttonText}>Entendido</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
+              <Pressable style={styles.acceptBtn} onPress={() => setVisible(false)}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                <Text style={styles.buttonText}>Entendido</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>

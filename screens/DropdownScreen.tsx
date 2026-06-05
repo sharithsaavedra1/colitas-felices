@@ -1,146 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Platform,
-  Pressable,
-  Modal,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { Ionicons } from '@expo/vector-icons';
-
-type FilterId = 'all' | 'small' | 'medium' | 'large' | 'puppy' | 'adult';
-
-const filters = [
-  { label: 'Todos', value: 'all' as FilterId },
-  { label: 'Pequeños', value: 'small' as FilterId },
-  { label: 'Medianos', value: 'medium' as FilterId },
-  { label: 'Grandes', value: 'large' as FilterId },
-  { label: 'Cachorros', value: 'puppy' as FilterId },
-  { label: 'Adultos', value: 'adult' as FilterId },
-];
-
-const pets = [
-  { name: 'Mika', size: 'medium' as FilterId },
-  { name: 'Riley', size: 'large' as FilterId },
-  { name: 'Luna', size: 'small' as FilterId },
-  { name: 'Toby', size: 'puppy' as FilterId },
-  { name: 'Kira', size: 'adult' as FilterId },
-  { name: 'Milo', size: 'small' as FilterId },
-  { name: 'Bruno', size: 'medium' as FilterId },
-];
+import React from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import CategoryPicker from '../components/dropdown/CategoryPicker';
+import PetListItem from '../components/pets/PetListItem';
+import { usePetFilter } from '../hooks/usePetFilter';
+import { filters } from '../data/filters';
 
 export default function DropdownScreen() {
-  const [selected, setSelected] = useState<FilterId>('all');
-  const [iosPickerVisible, setIosPickerVisible] = useState(false);
+  const { selected, setSelected, filtered } = usePetFilter('all');
 
-  const selectedLabel =
-    filters.find((f) => f.value === selected)?.label || 'Selecciona una categoría';
-
-  const filteredPets = useMemo(() => {
-    if (selected === 'all') return pets;
-    return pets.filter((pet) => pet.size === selected);
-  }, [selected]);
+  const selectedLabel = filters.find((f) => f.value === selected)?.label || 'Selecciona una categoría';
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Filtrar perritos</Text>
-      <Text style={styles.subtitle}>
-        Selecciona una categoría y mira solo esos resultados
-      </Text>
+      <Text style={styles.subtitle}>Selecciona una categoría y mira solo esos resultados</Text>
 
       <View style={styles.card}>
         <Text style={styles.label}>Categoría</Text>
-
-        {Platform.OS === 'ios' ? (
-          <>
-            <Pressable
-              style={styles.iosSelectButton}
-              onPress={() => setIosPickerVisible(true)}
-            >
-              <Text style={styles.iosSelectText}>{selectedLabel}</Text>
-              <Ionicons name="chevron-down" size={20} color="#B88761" />
-            </Pressable>
-
-            <Text style={styles.helper}>Toca para abrir las opciones</Text>
-
-            <Modal
-              visible={iosPickerVisible}
-              transparent
-              animationType="slide"
-              onRequestClose={() => setIosPickerVisible(false)}
-            >
-              <Pressable
-                style={styles.modalBackdrop}
-                onPress={() => setIosPickerVisible(false)}
-              />
-
-              <View style={styles.iosSheet}>
-                <View style={styles.iosSheetHeader}>
-                  <Pressable onPress={() => setIosPickerVisible(false)}>
-                    <Text style={styles.headerAction}>Cancelar</Text>
-                  </Pressable>
-
-                  <Text style={styles.headerTitle}>Selecciona categoría</Text>
-
-                  <Pressable onPress={() => setIosPickerVisible(false)}>
-                    <Text style={styles.headerAction}>Listo</Text>
-                  </Pressable>
-                </View>
-
-                <Picker
-                  selectedValue={selected}
-                  onValueChange={(itemValue) => setSelected(itemValue as FilterId)}
-                  itemStyle={styles.itemStyleIOS}
-                >
-                  {filters.map((f) => (
-                    <Picker.Item key={f.value} label={f.label} value={f.value} />
-                  ))}
-                </Picker>
-              </View>
-            </Modal>
-          </>
-        ) : (
-          <>
-            <View style={styles.pickerWrap}>
-              <Picker
-                selectedValue={selected}
-                onValueChange={(itemValue) => setSelected(itemValue as FilterId)}
-                style={styles.picker}
-                dropdownIconColor="#B88761"
-              >
-                {filters.map((f) => (
-                  <Picker.Item key={f.value} label={f.label} value={f.value} />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.helper}>Seleccionado: {selectedLabel}</Text>
-          </>
-        )}
+        <CategoryPicker selected={selected} onChange={setSelected} />
       </View>
 
-      <Text style={styles.listTitle}>Resultados ({filteredPets.length})</Text>
+      <Text style={styles.listTitle}>Resultados ({filtered.length})</Text>
 
       <FlatList
-        data={filteredPets}
+        data={filtered}
         keyExtractor={(item) => item.name}
         contentContainerStyle={{ paddingBottom: 18 }}
         renderItem={({ item }) => (
-          <View style={styles.petRow}>
-            <View style={styles.dot}>
-              <Ionicons name="paw" size={14} color="#fff" />
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.petName}>{item.name}</Text>
-              <Text style={styles.petCat}>
-                {filters.find((f) => f.value === item.size)?.label}
-              </Text>
-            </View>
-          </View>
+          <PetListItem name={item.name} sizeLabel={filters.find((f) => f.value === item.size)?.label} />
         )}
       />
     </View>

@@ -1,10 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
-import { homePets } from '../constants/pets';
+import { homePets } from '../data/pets';
 import PetCard from '../components/pets/PetCard';
+import { RootStackParamList } from '../navigation/types';
 
-export default function HomeScreen({ navigation }: any) {
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
+
+export default function HomeScreen() {
+  const navigation = useNavigation<NavProp>();
   return (
     <ScrollView style={styles.bg} contentContainerStyle={styles.container}>
       <View style={styles.heroCard}>
@@ -23,11 +29,7 @@ export default function HomeScreen({ navigation }: any) {
       <Text style={styles.sectionTitle}>Perritos disponibles</Text>
 
       {homePets.map((pet) => (
-        <PetCard
-          key={pet.name}
-          pet={pet}
-          onPress={() => navigation.navigate('Detalle', pet)}
-        />
+        <PetCard key={pet.name} pet={pet} onPress={() => navigation.navigate('Detalle', pet)} />
       ))}
     </ScrollView>
   );
